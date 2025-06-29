@@ -8,7 +8,7 @@ import (
 	"math/rand"
 )
 
-//go:embed fake_data/src/fake_useragent/data/browsers.jsonl
+//go:embed user-agents.jsonl
 var browsersJsonl []byte
 
 // Browser represents a user agent with its details.
