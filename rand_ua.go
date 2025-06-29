@@ -13,16 +13,23 @@ var browsersJsonl []byte
 
 // Browser represents a user agent with its details.
 type Browser struct {
-	UserAgent                string  `json:"useragent"`
-	Percent                  float64 `json:"percent"`
-	Type                     string  `json:"type"`
-	DeviceBrand              string  `json:"device_brand"`
-	Browser                  string  `json:"browser"`
-	BrowserVersion           string  `json:"browser_version"`
-	BrowserVersionMajorMinor float64 `json:"browser_version_major_minor"`
-	Os                       string  `json:"os"`
-	OsVersion                string  `json:"os_version"`
-	Platform                 string  `json:"platform"`
+	AppName    string `json:"appName"`
+	Connection struct {
+		Downlink      int    `json:"downlink"`
+		EffectiveType string `json:"effectiveType"`
+		Rtt           int    `json:"rtt"`
+	} `json:"connection"`
+	Language       string  `json:"language"`
+	Platform       string  `json:"platform"`
+	PluginsLength  int     `json:"pluginsLength"`
+	ScreenHeight   int     `json:"screenHeight"`
+	ScreenWidth    int     `json:"screenWidth"`
+	UserAgent      string  `json:"userAgent"`
+	Vendor         string  `json:"vendor"`
+	ViewportHeight int     `json:"viewportHeight"`
+	ViewportWidth  int     `json:"viewportWidth"`
+	Weight         float64 `json:"weight"`
+	DeviceCategory string  `json:"deviceCategory"`
 }
 
 // MustGetRandomUA returns a random User-Agent string from the embedded browsers data.

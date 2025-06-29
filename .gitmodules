@@ -1,3 +1,0 @@
-[submodule "fake_data"]
-	path = fake_data
-	url = https://github.com/fake-useragent/fake-useragent

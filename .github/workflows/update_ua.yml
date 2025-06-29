@@ -1,0 +1,67 @@
+name: Update User Agents
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * 0" # weekly
+
+permissions:
+  contents: write
+
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq gh
+
+      - name: Set up git user
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create branch
+        id: create_branch
+        run: |
+          BRANCH="update-useragents-$(date +%Y%m%d)"
+          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+          git checkout -b "$BRANCH"
+
+      - name: Download and convert JSON to JSONL
+        run: |
+          URL="https://raw.githubusercontent.com/intoli/user-agents/main/src/user-agents.json.gz"
+          OUTPUT_JSONL="user-agents.jsonl"
+
+          curl -sSL "$URL" | gunzip | jq -c '.[]' > "$OUTPUT_JSONL"
+          echo "Converted JSONL written to $OUTPUT_JSONL"
+
+      - name: Commit changes
+        run: |
+          if [[ -n $(git status --porcelain) ]]; then
+            git add user-agents.jsonl
+            git commit -m "chore: update user-agents.jsonl"
+          else
+            echo "No changes to commit"
+            exit 0
+          fi
+
+      - name: Push branch
+        run: |
+          git push origin ${{ steps.create_branch.outputs.branch }}
+
+      - name: Create Pull Request using gh CLI
+        run: |
+          gh pr create \
+            --title "chore(deps): update user-agents.jsonl" \
+            --body "Weekly update of \`user-agents.jsonl\` file from [intoli/user-agents](https://github.com/intoli/user-agents)." \
+            --head "${{ steps.create_branch.outputs.branch }}" \
+            --base "main"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
