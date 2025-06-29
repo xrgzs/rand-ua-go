@@ -30,7 +30,7 @@ jobs:
       - name: Create branch
         id: create_branch
         run: |
-          BRANCH="update-useragents-$(date +%Y%m%d)"
+          BRANCH="update-useragents-$(date +%s)"
           echo "branch=$BRANCH" >> $GITHUB_OUTPUT
           git checkout -b "$BRANCH"
 
