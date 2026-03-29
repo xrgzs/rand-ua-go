@@ -28,13 +28,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Create branch
-        id: create_branch
-        run: |
-          BRANCH="update-useragents-$(date +%s)"
-          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
-          git checkout -b "$BRANCH"
-
       - name: Download and convert JSON to JSONL
         run: |
           URL="https://raw.githubusercontent.com/intoli/user-agents/main/src/user-agents.json.gz"
@@ -43,21 +36,37 @@ jobs:
           curl -sSL "$URL" | gunzip | jq -c '.[]' > "$OUTPUT_JSONL"
           echo "Converted JSONL written to $OUTPUT_JSONL"
 
-      - name: Commit changes
+      - name: Check for changes
+        id: check_changes
         run: |
           if [[ -n $(git status --porcelain) ]]; then
-            git add user-agents.jsonl
-            git commit -m "chore: update user-agents.jsonl"
+            echo "changed=true" >> $GITHUB_OUTPUT
           else
-            echo "No changes to commit"
-            exit 0
+            echo "No changes detected, skipping branch creation and PR."
+            echo "changed=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: Create branch
+        id: create_branch
+        if: steps.check_changes.outputs.changed == 'true'
+        run: |
+          BRANCH="update-useragents-$(date +%s)"
+          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+          git checkout -b "$BRANCH"
+
+      - name: Commit changes
+        if: steps.check_changes.outputs.changed == 'true'
+        run: |
+          git add user-agents.jsonl
+          git commit -m "chore: update user-agents.jsonl"
+
       - name: Push branch
+        if: steps.check_changes.outputs.changed == 'true'
         run: |
           git push origin ${{ steps.create_branch.outputs.branch }}
 
       - name: Create Pull Request using gh CLI
+        if: steps.check_changes.outputs.changed == 'true'
         run: |
           gh pr create \
             --title "chore(deps): update user-agents.jsonl" \
